@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  nginx:
+    restart: always
+    container_name: instaunlocker_nginx
+    volumes:
+      - ./instaunlocker:/code/instaunlocker/
+      - ./static:/code/static/
+      - sock:/sock
+    build:
+      context: .
+      dockerfile: dockerfiles/docker_nginx.conf
+    depends_on:
+      - django
+    ports:
+      - '80:80'
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=name
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=passwordw
+    ports:
+      - '5432:5432'
+
+  django:
+    restart: always
+    container_name: instaunlocker_django
+    volumes:
+      - ./instaunlocker:/code/instaunlocker/
+      - sock:/sock
+    build:
+      context: .
+      dockerfile: dockerfiles/docker_django.conf
+    depends_on:
+      - db
+    command: uwsgi --ini /etc/uwsgi.ini
+    ports:
+      - '8001:8001'
+
+volumes:
+  postgres_data:
+  sock:
